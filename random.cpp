@@ -1,4 +1,19 @@
-#include "random.hpp"
+#define MODULUS 0x100000000 // 2^32
+#define MULTIPLIER 22695477
+#define INCREMENT 1
+
+class Random
+{
+    private:
+        int seed;
+    public:
+        void init(int time);
+        void next();
+        int int32();
+        short int16();
+        int range(int min, int max);
+        bool boolean();
+};
 
 void Random::init(int time)
 {
