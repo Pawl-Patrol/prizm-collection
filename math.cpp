@@ -25,6 +25,15 @@ float abs(float x)
     return max(x, -x);
 }
 
+float fmod(float a, int b)
+{
+    while ((int)a > b)
+    {
+        a -= (float)b;
+    }
+    return a;
+}
+
 float radians(float degrees)
 {
     return degrees * PI / 180;
