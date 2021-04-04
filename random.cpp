@@ -46,3 +46,8 @@ bool Random::boolean()
 {
     return range(0, 1);
 }
+
+int Random::sign()
+{
+    return 1 - 2 * boolean();
+}
