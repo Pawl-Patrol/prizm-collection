@@ -1,4 +1,6 @@
 #define PI 3.141592653589793
+#define PI2 6.283185307179586
+#define TRIG_ITERATIONS 10
 
 float max(float a, float b)
 {
@@ -10,79 +12,71 @@ float min(float a, float b)
     return a < b ? a : b;
 }
 
+float abs(float x)
+{
+    return max(-x, x);
+}
+
 float floor(float x)
 {
-    return (float)(int)x;
+    return int(x);
 }
 
 float ceil(float x)
 {
-    return floor(x + 0.5f);
+    return int(x + 0.5f);
 }
 
-float abs(float x)
+float frac(float x)
 {
-    return max(x, -x);
+    return x - floor(x);
 }
 
-float fmod(float a, int b)
+float fmod(float a, float b)
 {
-    while ((int)a > b)
-    {
-        a -= (float)b;
-    }
-    return a;
+    float c = frac(abs(a / b)) * abs(b);
+    return (a < 0) ? -c : c;
 }
 
-float radians(float degrees)
+float rad(float deg)
 {
-    return degrees * PI / 180;
+    return deg * PI / 180;
 }
 
-float degrees(float radians)
+float deg(float rad)
 {
-    return radians * 180 / PI;
+    return rad * 180 / PI;
 }
 
-unsigned int factorial(unsigned int x)
+float sqrt(float x)
 {
-    if (x == 0)
-    {
-        return 1;
-    }
-    for (unsigned int i = x - 1; i > 1; i--)
-    {
-        x *= i;
-    }
+    unsigned int i = *(unsigned int *)&x;
+    i += 127 << 23;
+    i >>= 1;
+    float x2 = *(float *)&i;
+    x2 -= (x2 * x2 - x) / (2 * x2);
+    return x2;
+}
+
+float rsqrt(float x)
+{
+    float xhalf = 0.5f * x;
+    int i = *(int *)&x;
+    i = 0x5f375a86 - (i >> 1);
+    x = *(float *)&i;
+    x = x * (1.5f - xhalf * x * x);
     return x;
 }
 
-float sqrt(float x, unsigned int iterations)
+float sin(float x)
 {
-    if (x == 0)
-    {
-        return 0;
-    }
-    float guess = x;
-    while (iterations--)
-    {
-        guess -= (guess * guess - x) / (2 * guess);
-    }
-    return guess;
-}
-
-float sin(float x, unsigned int iterations)
-{
-    if (x == 0)
-    {
-        return 0;
-    }
+    x = fmod(x, PI2);
     float x_sq = x;
     float result = x;
     float sign = 1;
     float fact = 1;
     x *= x;
-    for (int n = 1; n < iterations; n++)
+    for (int n = 1; n < TRIG_ITERATIONS; n++)
     {
         x_sq *= x;
         sign *= -1;
@@ -92,18 +86,15 @@ float sin(float x, unsigned int iterations)
     return result;
 }
 
-float cos(float x, unsigned int iterations)
+float cos(float x)
 {
-    if (x == 0.0)
-    {
-        return 1;
-    }
+    x = fmod(x, PI2);
     x *= x;
     float x_sq = 1;
     float sign = 1;
     float result = 1;
     float fact = 1;
-    for (int n = 1; n < iterations; n++)
+    for (int n = 1; n < TRIG_ITERATIONS; n++)
     {
         x_sq *= x;
         sign *= -1;
@@ -113,34 +104,56 @@ float cos(float x, unsigned int iterations)
     return result;
 }
 
-float arcsin(float x, unsigned int iterations)
+float asin(float x)
 {
-    if (x == 0.0)
-    {
-        return 0;
-    }
-    float result = x;
-    float mult = x;
-    float mfour = 1;
-    float fact1 = 1;
-    float fact2 = 1;
-    x *= x;
-    for (int n = 1; n < iterations; n++)
-    {
-        mfour *= 4;
-        fact1 *= 2 * n * (2 * n - 1);
-        fact2 *= n;
-        mult *= x;
-        result += mult * fact1 / (mfour * fact2 * fact2 * (2 * n + 1));
-    }
-    return result;
+    float negate = float(x < 0);
+    x = abs(x);
+    float ret = -0.0187293;
+    ret *= x;
+    ret += 0.0742610;
+    ret *= x;
+    ret -= 0.2121144;
+    ret *= x;
+    ret += 1.5707288;
+    ret = PI * 0.5 - sqrt(1.0 - x) * ret;
+    return ret - 2 * negate * ret;
 }
 
-float arccos(float x, unsigned int iterations)
+float _acos(float x)
 {
-    if (x == 1.0)
-    {
-        return 0;
-    }
-    return PI / 2 - arcsin(x, iterations);
+    float negate = float(x < 0);
+    x = abs(x);
+    float ret = -0.0187293;
+    ret = ret * x;
+    ret = ret + 0.0742610;
+    ret = ret * x;
+    ret = ret - 0.2121144;
+    ret = ret * x;
+    ret = ret + 1.5707288;
+    ret = ret * sqrt(1.0 - x);
+    ret = ret - 2 * negate * ret;
+    return negate * PI + ret;
+}
+
+float atan2(float y, float x)
+{
+    float t0, t1, t2, t3, t4;
+    t3 = abs(x);
+    t1 = abs(y);
+    t0 = max(t3, t1);
+    t1 = min(t3, t1);
+    t3 = 1 / t0;
+    t3 = t1 * t3;
+    t4 = t3 * t3;
+    t0 = -0.013480470;
+    t0 = t0 * t4 + 0.057477314;
+    t0 = t0 * t4 - 0.121239071;
+    t0 = t0 * t4 + 0.195635925;
+    t0 = t0 * t4 - 0.332994597;
+    t0 = t0 * t4 + 0.999995630;
+    t3 = t0 * t3;
+    t3 = (abs(y) > abs(x)) ? 1.570796327 - t3 : t3;
+    t3 = (x < 0) ? PI - t3 : t3;
+    t3 = (y < 0) ? -t3 : t3;
+    return t3;
 }
