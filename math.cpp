@@ -119,7 +119,7 @@ float asin(float x)
     return ret - 2 * negate * ret;
 }
 
-float _acos(float x)
+float acos(float x)
 {
     float negate = float(x < 0);
     x = abs(x);
