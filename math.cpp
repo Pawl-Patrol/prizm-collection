@@ -1,36 +1,18 @@
 #define PI 3.141592653589793
 #define PI2 6.283185307179586
-#define TRIG_ITERATIONS 10
 
-float max(float a, float b)
+struct Vector3
 {
-    return a > b ? a : b;
-}
+    float x, y, z;
+};
 
-float min(float a, float b)
-{
-    return a < b ? a : b;
-}
 
-float abs(float x)
-{
-    return max(-x, x);
-}
-
-float floor(float x)
-{
-    return int(x);
-}
-
-float ceil(float x)
-{
-    return int(x + 0.5f);
-}
-
-float frac(float x)
-{
-    return x - floor(x);
-}
+#define floor(x) (int)f - (f < 0)
+#define ceil(x) (int)f + (f > 0)
+#define max(a, b) a > b ? a : b
+#define min(a, b) a < b ? a : b
+#define abs(x) max(x, -x)
+#define frac(x) x - (int)x
 
 float fmod(float a, float b)
 {
@@ -38,15 +20,8 @@ float fmod(float a, float b)
     return (a < 0) ? -c : c;
 }
 
-float rad(float deg)
-{
-    return deg * PI / 180;
-}
-
-float deg(float rad)
-{
-    return rad * 180 / PI;
-}
+#define SQRT_ITERATIONS 10
+#define RSQRT_ITERATIONS 5
 
 float sqrt(float x)
 {
@@ -54,7 +29,10 @@ float sqrt(float x)
     i += 127 << 23;
     i >>= 1;
     float x2 = *(float *)&i;
-    x2 -= (x2 * x2 - x) / (2 * x2);
+    for (int n = 1; n < SQRT_ITERATIONS; n++)
+    {
+        x2 -= (x2 * x2 - x) / (2 * x2);
+    }
     return x2;
 }
 
@@ -64,9 +42,34 @@ float rsqrt(float x)
     int i = *(int *)&x;
     i = 0x5f375a86 - (i >> 1);
     x = *(float *)&i;
-    x = x * (1.5f - xhalf * x * x);
+    for (int n = 1; n < RSQRT_ITERATIONS; n++)
+    {
+        x *= 1.5f - xhalf * x * x;
+    }
     return x;
 }
+
+float log2(float x)
+{
+    x = (float)*(long *)&x;
+    x *= 1.1920928955078125e-7f;
+    return x - 126.94269504f;
+}
+
+#define RLD10 0.30103 // 1 / log2(10)
+
+float log10(float x)
+{
+    return log2(x) * RLD10;
+}
+
+#define PI 3.141592653589793f
+#define PI2 6.283185307179586f
+#define ONEOVERTWOPI 0.159154943091895f
+#define PIOVERTWO 1.570796326794896f
+
+#define rad(x) x * PI / 180
+#define deg(x) x * 180 / PI
 
 float sin(float x)
 {
@@ -104,56 +107,4 @@ float cos(float x)
     return result;
 }
 
-float asin(float x)
-{
-    float negate = float(x < 0);
-    x = abs(x);
-    float ret = -0.0187293;
-    ret *= x;
-    ret += 0.0742610;
-    ret *= x;
-    ret -= 0.2121144;
-    ret *= x;
-    ret += 1.5707288;
-    ret = PI * 0.5 - sqrt(1.0 - x) * ret;
-    return ret - 2 * negate * ret;
-}
-
-float acos(float x)
-{
-    float negate = float(x < 0);
-    x = abs(x);
-    float ret = -0.0187293;
-    ret = ret * x;
-    ret = ret + 0.0742610;
-    ret = ret * x;
-    ret = ret - 0.2121144;
-    ret = ret * x;
-    ret = ret + 1.5707288;
-    ret = ret * sqrt(1.0 - x);
-    ret = ret - 2 * negate * ret;
-    return negate * PI + ret;
-}
-
-float atan2(float y, float x)
-{
-    float t0, t1, t2, t3, t4;
-    t3 = abs(x);
-    t1 = abs(y);
-    t0 = max(t3, t1);
-    t1 = min(t3, t1);
-    t3 = 1 / t0;
-    t3 = t1 * t3;
-    t4 = t3 * t3;
-    t0 = -0.013480470;
-    t0 = t0 * t4 + 0.057477314;
-    t0 = t0 * t4 - 0.121239071;
-    t0 = t0 * t4 + 0.195635925;
-    t0 = t0 * t4 - 0.332994597;
-    t0 = t0 * t4 + 0.999995630;
-    t3 = t0 * t3;
-    t3 = (abs(y) > abs(x)) ? 1.570796327 - t3 : t3;
-    t3 = (x < 0) ? PI - t3 : t3;
-    t3 = (y < 0) ? -t3 : t3;
-    return t3;
-}
+#define tan(x) sin(x) / cos(x)
