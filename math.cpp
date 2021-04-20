@@ -68,6 +68,8 @@ float log10(float x)
 #define rad(x) x * PI / 180
 #define deg(x) x * 180 / PI
 
+#define TRIG_ITERATIONS 15
+
 float sin(float x)
 {
     x = fmod(x, PI2);
