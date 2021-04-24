@@ -8,17 +8,17 @@ struct Vector3
     float x, y, z;
 };
 
-float _floor(float f) {return (int)f - (f < 0);}
-float _ceil(float f) {return (int)f + (f > 0);}
+float floor(float f) {return (int)f - (f < 0);}
+float ceil(float f) {return (int)f + (f > 0);}
 
-float _max(float a, float b) {return a > b ? a : b;}
-float _min(float a, float b) {return a < b ? a : b;}
+float max(float a, float b) {return a > b ? a : b;}
+float min(float a, float b) {return a < b ? a : b;}
 
-float _abs(float x) {return _max(-x, x);}
-float _frac(float x) {return x - _floor(x);}
-float _fmod(float a, float b) {return a - (int)(a / b) * b;}
+float abs(float x) {return _max(-x, x);}
+float frac(float x) {return x - _floor(x);}
+float fmod(float a, float b) {return a - (int)(a / b) * b;}
 
-float _sqrt(float x)
+float sqrt(float x)
 {
     unsigned int i = *(unsigned int *)&x;
     i += 127 << 23;
@@ -31,7 +31,7 @@ float _sqrt(float x)
     return x2;
 }
 
-float _rsqrt(float x)
+float rsqrt(float x)
 {
     float xhalf = 0.5f * x;
     int i = *(int *)&x;
@@ -59,11 +59,11 @@ float log10(float x)
 }
 
 const float radhelper = PI / 180;
-float _rad(float x) {return x * radhelper;}
+float rad(float x) {return x * radhelper;}
 const float deghelper = 180 / PI;
-float _deg(float x) {return x * deghelper;}
+float deg(float x) {return x * deghelper;}
 
-float _sin(float x)
+float sin(float x)
 {
     x = _fmod(x, 2 * PI);
     double x_sq = x;
@@ -81,7 +81,7 @@ float _sin(float x)
     return result;
 }
 
-float _cos(float x)
+float cos(float x)
 {
     x = _fmod(x, 2 * PI);
     double x_x = x * x;
@@ -99,7 +99,7 @@ float _cos(float x)
     return result;
 }
 
-float _asin(float x)
+float asin(float x)
 {
     double result = x;
     double mult = x;
@@ -118,7 +118,7 @@ float _asin(float x)
     return result;
 }
 
-float _acos(float x)
+float acos(float x)
 {
     return PI * 0.5 - _asin(x);
 }
