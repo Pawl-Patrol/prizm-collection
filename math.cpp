@@ -14,8 +14,8 @@ float ceil(float f) {return (int)f + (f > 0);}
 float max(float a, float b) {return a > b ? a : b;}
 float min(float a, float b) {return a < b ? a : b;}
 
-float abs(float x) {return _max(-x, x);}
-float frac(float x) {return x - _floor(x);}
+float abs(float x) {return max(-x, x);}
+float frac(float x) {return x - floor(x);}
 float fmod(float a, float b) {return a - (int)(a / b) * b;}
 
 float sqrt(float x)
@@ -65,7 +65,7 @@ float deg(float x) {return x * deghelper;}
 
 float sin(float x)
 {
-    x = _fmod(x, 2 * PI);
+    x = fmod(x, 2 * PI);
     double x_sq = x;
     double result = x;
     double sign = 1;
@@ -83,7 +83,7 @@ float sin(float x)
 
 float cos(float x)
 {
-    x = _fmod(x, 2 * PI);
+    x = fmod(x, 2 * PI);
     double x_x = x * x;
     double x_sq = 1;
     double sign = 1;
@@ -120,5 +120,5 @@ float asin(float x)
 
 float acos(float x)
 {
-    return PI * 0.5 - _asin(x);
+    return PI * 0.5 - asin(x);
 }
