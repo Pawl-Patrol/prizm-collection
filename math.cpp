@@ -91,7 +91,7 @@ float cos(float x)
     double fact = 1;
     for (int n = 1; n < TRIG_ITERATIONS; n++)
     {
-        x_sq *= x;
+        x_sq *= x_x;
         sign *= -1;
         fact *= 2 * n * (2 * n - 1);
         result += sign * x_sq / fact;
