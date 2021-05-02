@@ -16,6 +16,17 @@ void plot(int x, int y, color_t color, bool bounded)
     *VRAM = color;
 }
 
+void fillArea(unsigned x, unsigned y, unsigned w, unsigned h, color_t color, bool bounded)
+{
+    for (int i = 0; i < w; i++)
+    {
+        for (int j = 0; j < h; j++)
+        {
+            plot(x + i, y + h, color, bounded);
+        }
+    }
+}
+
 void getRGB(color_t color, int *r, int *g, int *b)
 {
     *r = color >> 11;
