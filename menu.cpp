@@ -1,10 +1,19 @@
 #include <fxcg/display.h>
 #include <fxcg/keyboard.h>
+#include <fxcg/system.h>
 
-const color_t COLOR_BACKGROUND_SELECTED = COLOR_BLACK;
-const color_t COLOR_BACKGROUND_UNSELECTED = COLOR_WHITE;
-const color_t COLOR_TEXT_SELECTED = COLOR_WHITE;
-const color_t COLOR_TEXT_UNSELECTED = COLOR_BLACK;
+#include "draw.hpp"
+
+#define MENU_STATUS_AREA_HEIGHT 24
+#define MENU_FONT_MINI_HEIGHT 18
+#define MENU_FONT_NORMAL_WIDTH 18
+#define MENU_FONT_NORMAL_HEIGHT 24
+
+#define MENU_FONT_MODE_TRANSPARENT 0x02
+
+#define MENU_SPACING 8
+
+#define COLOR_HEADER COLOR_BLUE
 
 struct MenuElement
 {
@@ -16,25 +25,24 @@ struct MenuElement
 void drawElement(int pos, const char *text, bool selected)
 {
     int x = 0;
-    int y = pos * FONT_HEIGHT;
-    color_t *VRAM = (color_t *)GetVRAMAddress();
-    VRAM += (y + STATUS_AREA_HEIGHT) * LCD_WIDTH_PX;
-    for (int i = 0; i < FONT_HEIGHT * LCD_WIDTH_PX; i++)
-    {
-        *VRAM++ = selected ? COLOR_BACKGROUND_SELECTED : COLOR_BACKGROUND_UNSELECTED;
-    }
+    int y = MENU_FONT_NORMAL_HEIGHT + MENU_SPACING + pos * (MENU_SPACING + MENU_FONT_MINI_HEIGHT);
+    fillArea(0, MENU_STATUS_AREA_HEIGHT + y - MENU_SPACING / 2, LCD_WIDTH_PX, MENU_FONT_MINI_HEIGHT + MENU_SPACING, selected ? COLOR_BLACK : COLOR_WHITE);
     PrintMini(&x, &y, text, 0, LCD_WIDTH_PX, 0, 0, COLOR_BLACK, COLOR_BLACK, false, 0);
     x = (LCD_WIDTH_PX - x) / 2;
-    PrintMini(&x, &y, text, 0x02, LCD_WIDTH_PX, 0, 0, selected ? COLOR_TEXT_SELECTED : COLOR_TEXT_UNSELECTED, COLOR_BLACK, true, 0);
+    PrintMini(&x, &y, text, MENU_FONT_MODE_TRANSPARENT, LCD_WIDTH_PX, 0, 0, selected ? COLOR_WHITE : COLOR_BLACK, COLOR_BLACK, true, 0);
 }
 
-int getChoice(const MenuElement *elements, int size)
+int getChoice(char *header, const MenuElement *elements, int size)
 {
-    for (int i = 0; i < size; i++)
+    Bdisp_Fill_VRAM(COLOR_WHITE, 1);
+    int x = (LCD_WIDTH_PX - MB_ElementCount(header) * MENU_FONT_NORMAL_WIDTH) / 2;
+    PrintCXY(x, 0, header, TEXT_MODE_TRANSPARENT_BACKGROUND, -1, COLOR_HEADER, 0, 1, 0);
+    int index = 0;
+    for (int i = size - 1; i >= 0; i--)
     {
-        drawElement(i, elements[i].name, !i);
+        drawElement(i, elements[i].name, i == index);
     }
-    int key, result, index = 0;
+    int key, result;
     while (true)
     {
         GetKey(&key);
@@ -51,7 +59,7 @@ int getChoice(const MenuElement *elements, int size)
             }
             else
             {
-                result = getChoice(elements[index].subs, elements[index].id_or_size);
+                result = getChoice((char *)elements[index].name, elements[index].subs, elements[index].id_or_size);
             }
             break;
         }
@@ -62,12 +70,6 @@ int getChoice(const MenuElement *elements, int size)
             index %= size;
             drawElement(index, elements[index].name, true);
         }
-    }
-    color_t *VRAM = (color_t *)GetVRAMAddress();
-    VRAM += STATUS_AREA_HEIGHT * LCD_WIDTH_PX;
-    for (int i = 0; i < size * FONT_HEIGHT * LCD_WIDTH_PX; i++)
-    {
-        *VRAM++ = COLOR_BACKGROUND_UNSELECTED;
     }
     return result;
 }
