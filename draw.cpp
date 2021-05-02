@@ -1,28 +1,27 @@
 #include <fxcg/display.h>
+#include "math.hpp"
 
-void plot(int x, int y, color_t color, bool bounded)
+void drawFKey(int id, int pos)
 {
-    if (bounded)
-    {
-        x = (x + LCD_WIDTH_PX) % LCD_WIDTH_PX;
-        y = (y + LCD_HEIGHT_PX) % LCD_HEIGHT_PX;
-    }
-    else if (x < 0 || x >= LCD_WIDTH_PX || y < 0 || y >= LCD_HEIGHT_PX)
-    {
-        return;
-    }
+    void *bitmap;
+    GetFKeyPtr(id, &bitmap);
+    FKey_Display(pos, bitmap);
+}
+
+void plot(int x, int y, color_t color)
+{
     color_t *VRAM = (color_t *)GetVRAMAddress();
     VRAM += y * LCD_WIDTH_PX + x;
     *VRAM = color;
 }
 
-void fillArea(unsigned x, unsigned y, unsigned w, unsigned h, color_t color, bool bounded)
+void fillArea(unsigned x, unsigned y, unsigned w, unsigned h, color_t color)
 {
-    for (int i = 0; i < w; i++)
+    for (unsigned i = 0; i < w; i++)
     {
-        for (int j = 0; j < h; j++)
+        for (unsigned j = 0; j < h; j++)
         {
-            plot(x + i, y + h, color, bounded);
+            plot(x + i, y + j, color);
         }
     }
 }
@@ -87,22 +86,22 @@ void plotLineAA(int x0, int y0, int x1, int y1, color_t color, color_t backgroun
     }
 }
 
-void plotCircleAA(Vector center, int r, color_t color, color_t background, bool bounded)
+void plotCircleAA(int cx, int cy, int r, color_t color, color_t background)
 {
     int x = r, y = 0;
     int x2, e2, err = 2 - 2 * r;
     float alpha;
-    int col_r, col_g, col_b, bg_r, bg_g, bg_b;
     r = 1 - err;
+    int col_r, col_g, col_b, bg_r, bg_g, bg_b;
     getRGB(color, &col_r, &col_g, &col_b);
     getRGB(background, &bg_r, &bg_g, &bg_b);
     while (true)
     {
-        color = getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, fabs(err + 2.0f * (x + y) - 2) / r);
-        plot(center.x + x, center.y - y, color, bounded);
-        plot(center.x + y, center.y + x, color, bounded);
-        plot(center.x - x, center.y + y, color, bounded);
-        plot(center.x - y, center.y - x, color, bounded);
+        color = getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, abs(err + 2.0f * (x + y) - 2) / r);
+        plot(cx + x, cy - y, color);
+        plot(cx + y, cy + x, color);
+        plot(cx - x, cy + y, color);
+        plot(cx - y, cy - x, color);
         if (x == 0)
         {
             break;
@@ -115,10 +114,10 @@ void plotCircleAA(Vector center, int r, color_t color, color_t background, bool 
             if (alpha < 1.0f)
             {
                 color = getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, alpha);
-                plot(center.x + x, center.y - y + 1, color, bounded);
-                plot(center.x + y - 1, center.y + x, color, bounded);
-                plot(center.x - x, center.y + y - 1, color, bounded);
-                plot(center.x - y + 1.0f, center.y - x, color, bounded);
+                plot(cx + x, cy - y + 1, color);
+                plot(cx + y - 1, cy + x, color);
+                plot(cx - x, cy + y - 1, color);
+                plot(cx - y + 1.0f, cy - x, color);
             }
             err -= --x * 2 - 1;
         }
@@ -128,10 +127,10 @@ void plotCircleAA(Vector center, int r, color_t color, color_t background, bool 
             if (alpha < 1.0f)
             {
                 color = getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, alpha);
-                plot(center.x + x2, center.y - y, color, bounded);
-                plot(center.x + y, center.y + x2, color, bounded);
-                plot(center.x - x2, center.y + y, color, bounded);
-                plot(center.x - y, center.y - x2, color, bounded);
+                plot(cx + x2, cy - y, color);
+                plot(cx + y, cy + x2, color);
+                plot(cx - x2, cy + y, color);
+                plot(cx - y, cy - x2, color);
             }
             err -= --y * 2 - 1;
         }
