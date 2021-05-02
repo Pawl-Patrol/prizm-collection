@@ -42,47 +42,37 @@ color_t getAlpha(int col_r, int col_g, int col_b, int bg_r, int bg_g, int bg_b, 
     return col_r << 11 | col_g << 5 | col_b;
 }
 
-void plotLineAA(Vector p1, Vector p2, color_t color, color_t background, bool bounded)
+
+void plotLineAA(int x0, int y0, int x1, int y1, color_t color)
 {
-    float dx = fabs(p2.x - p1.x);
-    float dy = fabs(p2.y - p1.y);
-    int sx = p1.x < p2.x ? 1 : -1;
-    int sy = p1.y < p2.y ? 1 : -1;
-    float x2, e2, err = dx - dy;
-    float ed = dx + dy == 0.0f ? 1.0f : sqrt(dx * dx + dy * dy);
-    int col_r, col_g, col_b, bg_r, bg_g, bg_b;
-    getRGB(color, &col_r, &col_g, &col_b);
-    getRGB(background, &bg_r, &bg_g, &bg_b);
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int x2, e2, err = dx - dy;
+    int ed = dx + dy == 0 ? 1 : sqrt((float)dx * dx + (float)dy * dy);
+    int r, g, b;
+    getRGB(color, &r, &g, &b);
     while (true)
     {
-        plot(p1.x, p1.y, getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, fabs(err - dx + dy) / ed), bounded);
+        plot(x0, y0, getColorAlpha(r, g, b, (float)abs(err - dx + dy) / ed));
         e2 = err;
-        x2 = p1.x;
-        if (2.0f * e2 >= -dx)
+        x2 = x0;
+        if (2 * e2 >= -dx)
         {
-            if ((int)p1.x == (int)p2.x)
-            {
+            if (x0 == x1)
                 break;
-            }
             if (e2 + dy < ed)
-            {
-                plot(p1.x, p1.y + sy, getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, (e2 + dy) / ed), bounded);
-            }
+                plot(x0, y0 + sy, getColorAlpha(r, g, b, (float)(e2 + dy) / ed));
             err -= dy;
-            p1.x += sx;
+            x0 += sx;
         }
-        if (2.0f * e2 <= dy)
+        if (2 * e2 <= dy)
         {
-            if ((int)p1.y == (int)p2.y)
-            {
+            if (y0 == y1)
                 break;
-            }
             if (dx - e2 < ed)
-            {
-                plot(x2 + sx, p1.y, getAlpha(col_r, col_g, col_b, bg_r, bg_g, bg_b, (dx - e2) / ed), bounded);
-            }
+                plot(x2 + sx, y0, getColorAlpha(r, g, b, (float)(dx - e2) / ed));
             err += dx;
-            p1.y += sy;
+            y0 += sy;
         }
     }
 }
