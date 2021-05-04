@@ -11,12 +11,11 @@ void memcpy(void *dst, const void *src, int len)
     }
 }
 
-void memset(void *dst, const char byte, int len)
+void memset(char *dst, char byte, int len)
 {
-    char *d = (char *)dst;
-    for (int i = 0; i < len; i++)
+    while (len--)
     {
-        d[i] = byte;
+        *dst++ = byte;
     }
 }
 
@@ -961,7 +960,6 @@ static inline char *ftoa(float value, char *buffer, int precision)
 
         buffer[0] = '-';
         buffer += v.SignBit();
-
         if (exponent != 0 || significand != 0) // [[likely]]
         {
             // != 0
