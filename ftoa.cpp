@@ -18,11 +18,28 @@
 //
 //==================================================================================================
 
-#include <string.h>
-
 #define assert(ignore) ((void)0)
 #define DIGITS 53
 #define MAX_EXPONENT 1024
+
+void memcpy(void *dst, const void *src, int len)
+{
+    char *d = (char *)dst;
+    const char *s = (const char *)src;   
+    for (int i = 0; i < len; i++)
+    {
+        d[i] = s[i];
+    }
+}
+
+void memset(void *dst, const char byte, int len)
+{
+    char *d = (char *)dst;
+    for (int i = 0; i < len; i++)
+    {
+        d[i] = byte;
+    }
+}
 
 template <typename Dest, typename Source>
 static inline Dest ReinterpretBits(Source source)
