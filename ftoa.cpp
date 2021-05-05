@@ -1,6 +1,8 @@
 #define DIGITS 24
 #define MAX_EXPONENT 128
 
+const char SYMBOL_EXPONENT = '\x0F';
+
 void memcpy(void *dst, const void *src, int len)
 {
     char *d = (char *)dst;
@@ -828,10 +830,8 @@ static inline int DecimalLength(unsigned int v)
     return 1;
 }
 
-static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_exponent, int precision)
+static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_exponent, const int maxlen)
 {
-    int MinFixedDecimalPoint = -precision;
-    int MaxFixedDecimalPoint = precision + 2;
     // static_assert(MinFixedDecimalPoint <= -1, "internal error");
     // static_assert(MaxFixedDecimalPoint >= 9, "internal error");
 
@@ -843,11 +843,14 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
     int num_digits = DecimalLength(digits);
     const int decimal_point = num_digits + decimal_exponent;
 
+    int precision = 2;
+    const int MinFixedDecimalPoint = -(maxlen - precision - 2); // 2 -> "0."
+    const int MaxFixedDecimalPoint = maxlen - precision - 1; // 1 -> "."
+
     const bool use_fixed = MinFixedDecimalPoint <= decimal_point && decimal_point <= MaxFixedDecimalPoint;
 
     // Prepare the buffer.
     // Avoid calling memset/memcpy with variable arguments below...
-
     memset(buffer, '0', 16);
     // static_assert(MinFixedDecimalPoint >= -14, "internal error");
     // static_assert(MaxFixedDecimalPoint <= 16, "internal error");
@@ -880,7 +883,7 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
     num_digits -= tz;
     //  decimal_exponent += tz; // => decimal_point unchanged.
 
-    int decimals = 0;
+    int decimals;
     if (use_fixed)
     {
         decimals = num_digits - decimal_point;
@@ -889,6 +892,7 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
             // 0.[000]digits
             buffer[1] = '.';
             buffer = digits_end;
+            precision = maxlen - 2;
         }
         else if (decimal_point < num_digits)
         {
@@ -896,15 +900,23 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
             memmove(buffer + decimal_point + 1, buffer + decimal_point, 8);
             buffer[decimal_point] = '.';
             buffer = digits_end + 1;
+            precision = maxlen - (decimal_point + 1);
         }
         else
         {
             // digits[000]
             buffer += decimal_point;
+            return buffer;
+        }
+        if (decimals > precision)
+        {
+            buffer -= decimals - precision;
         }
     }
     else
     {
+        const int scientific_exponent = decimal_point - 1;
+
         buffer[0] = buffer[1];
         if (num_digits == 1)
         {
@@ -917,21 +929,20 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
             buffer[1] = '.';
             buffer = digits_end;
             decimals = num_digits - 1;
+            precision = maxlen - 5 - (scientific_exponent < 0) + (scientific_exponent < 10 && scientific_exponent > -10);
+            if (decimals > precision)
+            {
+                buffer -= decimals - precision;
+            }
         }
-    }
-    if (decimals > precision)
-    {
-        buffer -= decimals - precision;
-    }
-    if (!use_fixed)
-    {
 
-        const int scientific_exponent = decimal_point - 1;
         //      SF_ASSERT(scientific_exponent != 0);
-
-        memcpy(buffer, scientific_exponent < 0 ? "e-" : "e+", 2);
-        buffer += 2;
-
+        *buffer++ = SYMBOL_EXPONENT;
+        if (scientific_exponent < 0)
+        {
+            *buffer++ = '-';
+        }
+    
         const unsigned int k = static_cast<unsigned int>(scientific_exponent < 0 ? -scientific_exponent : scientific_exponent);
         if (k < 10)
         {
@@ -947,7 +958,7 @@ static inline char *FormatDigits(char *buffer, unsigned int digits, int decimal_
     return buffer;
 }
 
-static inline char *ftoa(float value, char *buffer, int precision)
+static inline char *ftoa(float value, char *buffer, int maxlen)
 {
     const Single v(value);
 
@@ -965,7 +976,7 @@ static inline char *ftoa(float value, char *buffer, int precision)
             // != 0
 
             const auto dec = ToDecimal32(significand, exponent);
-            return FormatDigits(buffer, dec.digits, dec.exponent, precision);
+            return FormatDigits(buffer, dec.digits, dec.exponent, maxlen - v.SignBit());
         }
         else
         {
