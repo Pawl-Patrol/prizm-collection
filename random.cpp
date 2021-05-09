@@ -1,39 +1,31 @@
+#ifndef RANDOM_HPP
+#define RANDOM_HPP
+
 #include <fxcg/rtc.h>
 
-#define MODULUS 0x100000000 // 2^32
-#define MULTIPLIER 22695477
-#define INCREMENT 1
-
-int seed = RTC_GetTicks();
-
-void next()
+int RandInt(int lower, int upper)
 {
-    seed = (MULTIPLIER * seed + INCREMENT) % MODULUS;
+    static int a = 123456789;
+    static int b = 362436069;
+    static int c = 521288629;
+    static int d = RTC_GetTicks();
+    int t;
+
+    t = a ^ (a << 11);
+    a = b;
+    b = c;
+    c = d;
+    return (d = d ^ (d >> 19) ^ (t ^ (t >> 8))) % upper + lower;
 }
 
-int int32()
+bool RandBool()
 {
-    next();
-    return seed;
+    return RandInt(0, 1);
 }
 
-short int16()
+char sign()
 {
-    next();
-    return seed >> 16;
+    return 1 - (RandBool() << 1);
 }
 
-int range(int min, int max)
-{
-    return min + (unsigned short)int16() % (max + 1 - min);
-}
-
-bool boolean()
-{
-    return range(0, 1);
-}
-
-int sign()
-{
-    return 1 - 2 * boolean();
-}
+#endif
