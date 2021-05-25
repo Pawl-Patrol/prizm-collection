@@ -1,0 +1,5 @@
+#define getBit(ptr, n) ((*(ptr + (n) / 8) >> ((n) % 8)) & 1)
+#define setBit(ptr, n) (*(ptr + (n) / 8) |= 1 << ((n) % 8))
+#define delBit(ptr, n) (*(ptr + (n) / 8) &= ~(1 << ((n) % 8)))
+#define togBit(ptr, n) (*(ptr + (n) / 8) ) ^= 1 << ((n) % 8)
+#define chgBit(ptr, n, x) (*(ptr + (n) / 8) = ((*(ptr + (n) / 8)) & ~(1 << ((n) % 8))) | ((x) << ((n) % 8)))
